@@ -9,7 +9,7 @@ public class FruitCollisionHandler : MonoBehaviour
     private float mergeDelay = 0.2f;
 
     [SerializeField]
-    private float bounceRestitution = 0.3f;
+    private float bounceRestitution = 0.05f;
 
     private Fruit fruit;
     private float lastMergeTime = -1f;
@@ -26,7 +26,7 @@ public class FruitCollisionHandler : MonoBehaviour
         if (rb != null)
         {
             PhysicsMaterial2D physicsMaterial = new PhysicsMaterial2D();
-            physicsMaterial.friction = 0.4f;
+            physicsMaterial.friction = 0.8f;
             physicsMaterial.bounciness = bounceRestitution;
             rb.sharedMaterial = physicsMaterial;
         }
