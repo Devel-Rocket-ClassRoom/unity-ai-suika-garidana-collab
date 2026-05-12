@@ -62,41 +62,27 @@ public class Fruit : MonoBehaviour
             return;
         }
 
-        // 스프라이트 설정 + 콜라이더/스케일을 스프라이트 실제 크기에 맞춰 보정
+        // 스프라이트는 표시용으로만 설정, 크기·콜라이더는 fruitData.radius로 고정
         if (spriteRenderer != null)
         {
             if (fruitData.sprite != null)
             {
                 spriteRenderer.sprite = fruitData.sprite;
                 spriteRenderer.color = Color.white;
-
-                // x/y 중 짧은 쪽 기준으로 원을 맞춤
-                // → 비정사각형·투명 여백 스프라이트에서도 콜라이더가 이미지 밖으로 나가지 않음
-                Vector2 ext = fruitData.sprite.bounds.extents;
-                float spriteLocalHalfSize = Mathf.Min(ext.x, ext.y);
-                if (spriteLocalHalfSize > 0f)
-                {
-                    float scale = fruitData.radius / spriteLocalHalfSize;
-                    transform.localScale = Vector3.one * scale;
-
-                    // 콜라이더 로컬 반경 = spriteLocalHalfSize
-                    // → 월드 반경 = spriteLocalHalfSize * scale = fruitData.radius ✓
-                    if (circleCollider != null)
-                    {
-                        circleCollider.radius = spriteLocalHalfSize;
-                        circleCollider.isTrigger = false;
-                    }
-                }
-                else
-                {
-                    ApplyDefaultSizeAndCollider();
-                }
             }
             else
             {
                 spriteRenderer.color = fruitData.color;
-                ApplyDefaultSizeAndCollider();
             }
+        }
+
+        // localScale = diameter(radius*2), 콜라이더 로컬 반경 0.5
+        // → 월드 콜라이더 반경 = 0.5 * (radius*2) = radius
+        transform.localScale = Vector3.one * fruitData.radius * 2f;
+        if (circleCollider != null)
+        {
+            circleCollider.radius = 0.5f;
+            circleCollider.isTrigger = false;
         }
 
         // Rigidbody 설정
