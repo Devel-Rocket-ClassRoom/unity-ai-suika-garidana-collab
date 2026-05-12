@@ -64,9 +64,9 @@ public static class FruitDatabase
 
     static FruitDatabase()
     {
-        // 과일 데이터 초기화 (GDD.md 기준)
-        float baseRadius = 0.5f; // 기본 반지름 조정
-        float sizeMultiplier = 1.25f;
+        // baseRadius=0.25, multiplier=1.32 → 체리 지름 0.5, 수박 지름 ≈8.0 (컨테이너 너비 10의 80%)
+        float baseRadius = 0.25f;
+        float sizeMultiplier = 1.32f;
 
         // 스프라이트 로드
         Sprite cherrySprite = null;
