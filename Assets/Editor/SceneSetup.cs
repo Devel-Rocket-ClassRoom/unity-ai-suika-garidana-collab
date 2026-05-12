@@ -31,8 +31,9 @@ public class SceneSetup
         CreateFruitPrefab();
         GameObject container = CreateContainer();
         GameObject gameOverLine = CreateGameOverLine();
-        GameObject gameManagerObj = CreateGameManager(gameOverLine);
+        CreateGameManager(gameOverLine);
         CreateFruitSpawner(container);
+        CreateUI();
         SetupMainCamera();
 
         EditorSceneManager.SaveScene(scene);
@@ -45,16 +46,37 @@ public class SceneSetup
     {
         Debug.Log("이슈 #4 - 물리 충돌 및 멈춤 구현 설정을 시작합니다...");
 
-        // 먼저 이슈 #3 설정 실행
         SetupScene();
 
-        // 이슈 #4 추가 설정
         CreateFloor();
         CreateWalls();
 
         Scene scene = EditorSceneManager.GetActiveScene();
         EditorSceneManager.SaveScene(scene);
         Debug.Log("✅ 이슈 #4 설정이 완료되었습니다!");
+    }
+
+    [MenuItem("Tools/Suika Game/Setup Scene for Issue #5 & #6")]
+    public static void SetupSceneForIssue5And6()
+    {
+        Debug.Log("이슈 #5/#6 - 머지 및 게임오버 설정을 시작합니다...");
+
+        SetupSceneForIssue4();
+
+        // GameManager에 FruitPrefab 연결
+        GameManager gm = Object.FindObjectOfType<GameManager>();
+        if (gm != null)
+        {
+            GameObject fruitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/FruitPrefab.prefab");
+            SerializedObject so = new SerializedObject(gm);
+            so.FindProperty("fruitPrefab").objectReferenceValue = fruitPrefab;
+            so.ApplyModifiedProperties();
+            Debug.Log("✅ GameManager에 FruitPrefab 연결 완료");
+        }
+
+        Scene scene = EditorSceneManager.GetActiveScene();
+        EditorSceneManager.SaveScene(scene);
+        Debug.Log("✅ 이슈 #5/#6 설정이 완료되었습니다!");
     }
 
     private static void CreateFruitPrefab()
@@ -110,12 +132,162 @@ public class SceneSetup
         GameObject gameManagerObj = new GameObject("GameManager");
         GameManager gameManager = gameManagerObj.AddComponent<GameManager>();
 
+        GameObject fruitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/FruitPrefab.prefab");
+
         SerializedObject so = new SerializedObject(gameManager);
         so.FindProperty("containerTop").objectReferenceValue = gameOverLine.transform;
+        so.FindProperty("fruitPrefab").objectReferenceValue = fruitPrefab;
         so.ApplyModifiedProperties();
 
-        Debug.Log("✅ GameManager 생성 완료");
+        Debug.Log("✅ GameManager 생성 완료 (FruitPrefab 포함)");
         return gameManagerObj;
+    }
+
+    /// <summary>
+    /// Canvas, 점수 텍스트, 다음 과일 이미지, 게임오버 패널을 생성한다
+    /// </summary>
+    private static void CreateUI()
+    {
+        // 기존 Canvas 재활용 또는 새로 생성
+        Canvas canvas = Object.FindObjectOfType<Canvas>();
+        GameObject canvasObj;
+        if (canvas == null)
+        {
+            canvasObj = new GameObject("Canvas");
+            canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
+            canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+        else
+        {
+            canvasObj = canvas.gameObject;
+        }
+
+        // UIManager 연결
+        UIManager uiManager = canvasObj.GetComponent<UIManager>();
+        if (uiManager == null)
+            uiManager = canvasObj.AddComponent<UIManager>();
+
+        // 점수 텍스트
+        GameObject scoreObj = new GameObject("ScoreText");
+        scoreObj.transform.SetParent(canvasObj.transform, false);
+        UnityEngine.UI.Text scoreText = scoreObj.AddComponent<UnityEngine.UI.Text>();
+        scoreText.text = "SCORE: 0";
+        scoreText.fontSize = 28;
+        scoreText.color = Color.black;
+        scoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        scoreText.alignment = TextAnchor.UpperLeft;
+        RectTransform scoreTf = scoreObj.GetComponent<RectTransform>();
+        scoreTf.anchorMin = new Vector2(0, 1);
+        scoreTf.anchorMax = new Vector2(0, 1);
+        scoreTf.pivot = new Vector2(0, 1);
+        scoreTf.anchoredPosition = new Vector2(20, -20);
+        scoreTf.sizeDelta = new Vector2(220, 50);
+
+        // 다음 과일 이미지
+        GameObject nextFruitObj = new GameObject("NextFruitImage");
+        nextFruitObj.transform.SetParent(canvasObj.transform, false);
+        UnityEngine.UI.Image nextFruitImg = nextFruitObj.AddComponent<UnityEngine.UI.Image>();
+        nextFruitImg.color = Color.white;
+        RectTransform nextFruitTf = nextFruitObj.GetComponent<RectTransform>();
+        nextFruitTf.anchorMin = new Vector2(1, 1);
+        nextFruitTf.anchorMax = new Vector2(1, 1);
+        nextFruitTf.pivot = new Vector2(1, 1);
+        nextFruitTf.anchoredPosition = new Vector2(-20, -20);
+        nextFruitTf.sizeDelta = new Vector2(80, 80);
+
+        // 게임오버 패널
+        GameObject gameOverPanel = new GameObject("GameOverPanel");
+        gameOverPanel.transform.SetParent(canvasObj.transform, false);
+        UnityEngine.UI.Image panelBg = gameOverPanel.AddComponent<UnityEngine.UI.Image>();
+        panelBg.color = new Color(0, 0, 0, 0.75f);
+        RectTransform panelTf = gameOverPanel.GetComponent<RectTransform>();
+        panelTf.anchorMin = Vector2.zero;
+        panelTf.anchorMax = Vector2.one;
+        panelTf.offsetMin = Vector2.zero;
+        panelTf.offsetMax = Vector2.zero;
+
+        // 게임오버 타이틀
+        GameObject titleObj = new GameObject("GameOverTitle");
+        titleObj.transform.SetParent(gameOverPanel.transform, false);
+        UnityEngine.UI.Text titleText = titleObj.AddComponent<UnityEngine.UI.Text>();
+        titleText.text = "GAME OVER";
+        titleText.fontSize = 52;
+        titleText.color = Color.white;
+        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        titleText.alignment = TextAnchor.MiddleCenter;
+        RectTransform titleTf = titleObj.GetComponent<RectTransform>();
+        titleTf.anchorMin = new Vector2(0.5f, 0.5f);
+        titleTf.anchorMax = new Vector2(0.5f, 0.5f);
+        titleTf.pivot = new Vector2(0.5f, 0.5f);
+        titleTf.anchoredPosition = new Vector2(0, 80);
+        titleTf.sizeDelta = new Vector2(400, 70);
+
+        // 최종 점수 텍스트
+        GameObject finalScoreObj = new GameObject("FinalScoreText");
+        finalScoreObj.transform.SetParent(gameOverPanel.transform, false);
+        UnityEngine.UI.Text finalScoreText = finalScoreObj.AddComponent<UnityEngine.UI.Text>();
+        finalScoreText.text = "최종 점수: 0";
+        finalScoreText.fontSize = 34;
+        finalScoreText.color = Color.yellow;
+        finalScoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        finalScoreText.alignment = TextAnchor.MiddleCenter;
+        RectTransform finalScoreTf = finalScoreObj.GetComponent<RectTransform>();
+        finalScoreTf.anchorMin = new Vector2(0.5f, 0.5f);
+        finalScoreTf.anchorMax = new Vector2(0.5f, 0.5f);
+        finalScoreTf.pivot = new Vector2(0.5f, 0.5f);
+        finalScoreTf.anchoredPosition = new Vector2(0, 10);
+        finalScoreTf.sizeDelta = new Vector2(400, 50);
+
+        // 재시작 버튼
+        GameObject restartBtn = new GameObject("RestartButton");
+        restartBtn.transform.SetParent(gameOverPanel.transform, false);
+        UnityEngine.UI.Button btnComp = restartBtn.AddComponent<UnityEngine.UI.Button>();
+        UnityEngine.UI.Image btnImg = restartBtn.AddComponent<UnityEngine.UI.Image>();
+        btnImg.color = new Color(0.2f, 0.8f, 0.2f, 1f);
+        RectTransform btnTf = restartBtn.GetComponent<RectTransform>();
+        btnTf.anchorMin = new Vector2(0.5f, 0.5f);
+        btnTf.anchorMax = new Vector2(0.5f, 0.5f);
+        btnTf.pivot = new Vector2(0.5f, 0.5f);
+        btnTf.anchoredPosition = new Vector2(0, -70);
+        btnTf.sizeDelta = new Vector2(220, 60);
+
+        GameObject btnTextObj = new GameObject("Text");
+        btnTextObj.transform.SetParent(restartBtn.transform, false);
+        UnityEngine.UI.Text btnText = btnTextObj.AddComponent<UnityEngine.UI.Text>();
+        btnText.text = "다시 시작";
+        btnText.fontSize = 28;
+        btnText.color = Color.white;
+        btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        btnText.alignment = TextAnchor.MiddleCenter;
+        RectTransform btnTextTf = btnTextObj.GetComponent<RectTransform>();
+        btnTextTf.anchorMin = Vector2.zero;
+        btnTextTf.anchorMax = Vector2.one;
+        btnTextTf.offsetMin = Vector2.zero;
+        btnTextTf.offsetMax = Vector2.zero;
+
+        // 버튼 클릭 이벤트 연결 (RestartGame)
+        GameManager gm = Object.FindObjectOfType<GameManager>();
+        if (gm != null)
+        {
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(
+                btnComp.onClick,
+                gm.RestartGame
+            );
+        }
+
+        gameOverPanel.SetActive(false);
+
+        // UIManager 필드 연결
+        SerializedObject soUI = new SerializedObject(uiManager);
+        soUI.FindProperty("scoreText").objectReferenceValue = scoreText;
+        soUI.FindProperty("nextFruitImage").objectReferenceValue = nextFruitImg;
+        soUI.FindProperty("gameOverPanel").objectReferenceValue = gameOverPanel;
+        soUI.FindProperty("finalScoreText").objectReferenceValue = finalScoreText;
+        soUI.ApplyModifiedProperties();
+
+        Debug.Log("✅ UI (점수·다음과일·게임오버 패널) 생성 완료");
     }
 
     private static void CreateFruitSpawner(GameObject container)

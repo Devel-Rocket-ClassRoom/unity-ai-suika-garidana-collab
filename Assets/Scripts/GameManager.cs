@@ -15,42 +15,45 @@ public class GameManager : MonoBehaviour
     private Transform containerTop; // 게임 오버 라인
 
     [SerializeField]
+    private GameObject fruitPrefab; // FruitCollisionHandler에서 머지 시 참조
+
+    [SerializeField]
     private float gameOverCheckInterval = 0.5f;
+
+    [SerializeField]
+    private float gameOverDelay = 1f; // 게임오버 라인 위에 머무는 시간 임계값 (초)
 
     private int score = 0;
     private float gameOverCheckTimer = 0f;
     private bool isGameOver = false;
+    private float aboveLineStartTime = -1f; // 과일이 라인 위에 처음 올라간 시간 (-1 = 없음)
 
     private void Awake()
     {
-        // 싱글톤 패턴
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
     }
 
     private void Start()
     {
         if (fruitSpawner == null)
-        {
             fruitSpawner = FindObjectOfType<FruitSpawner>();
-        }
 
         if (containerTop == null)
-        {
             Debug.LogWarning("ContainerTop이 할당되지 않았습니다!");
-        }
+
+        if (fruitPrefab == null)
+            Debug.LogWarning("FruitPrefab이 GameManager에 할당되지 않았습니다!");
     }
 
     private void Update()
     {
         if (!isGameOver)
         {
-            // 일정 간격으로 게임 오버 조건 확인
             gameOverCheckTimer += Time.deltaTime;
             if (gameOverCheckTimer >= gameOverCheckInterval)
             {
@@ -61,48 +64,52 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 게임 오버 조건을 확인한다 (과일이 상단 경계를 넘었는지)
+    /// 게임오버 라인 위에 과일이 gameOverDelay 초 이상 머물면 게임 오버 처리
     /// </summary>
     private void CheckGameOverCondition()
     {
         if (containerTop == null)
             return;
 
+        bool anyAboveLine = false;
         Fruit[] allFruits = FindObjectsOfType<Fruit>();
         foreach (Fruit fruit in allFruits)
         {
             if (fruit.transform.position.y > containerTop.position.y)
             {
-                GameOver();
-                return;
+                anyAboveLine = true;
+                break;
             }
+        }
+
+        if (anyAboveLine)
+        {
+            if (aboveLineStartTime < 0f)
+                aboveLineStartTime = Time.time;
+            else if (Time.time - aboveLineStartTime >= gameOverDelay)
+                GameOver();
+        }
+        else
+        {
+            aboveLineStartTime = -1f;
         }
     }
 
-    /// <summary>
-    /// 점수를 추가한다
-    /// </summary>
     public void AddScore(int points)
     {
         score += points;
         if (UIManager.Instance != null)
-        {
             UIManager.Instance.UpdateScore(score);
-        }
         Debug.Log($"점수 추가: +{points}, 현재 점수: {score}");
     }
 
-    /// <summary>
-    /// 현재 점수를 반환한다
-    /// </summary>
-    public int GetScore()
-    {
-        return score;
-    }
+    public int GetScore() => score;
 
     /// <summary>
-    /// 게임 오버 처리
+    /// FruitCollisionHandler에서 머지 시 사용할 프리팹을 반환한다
     /// </summary>
+    public GameObject GetFruitPrefab() => fruitPrefab;
+
     public void GameOver()
     {
         if (isGameOver)
@@ -112,28 +119,17 @@ public class GameManager : MonoBehaviour
         Debug.Log("게임 오버! 최종 점수: " + score);
 
         if (fruitSpawner != null)
-        {
             fruitSpawner.SetCanDrop(false);
-        }
 
-        // UI 표시 또는 다른 처리...
-        // TODO: 게임 오버 UI 구현
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowGameOver(score);
     }
 
-    /// <summary>
-    /// 게임을 재시작한다
-    /// </summary>
     public void RestartGame()
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    /// <summary>
-    /// 게임이 오버되었는지 확인한다
-    /// </summary>
-    public bool IsGameOver()
-    {
-        return isGameOver;
-    }
+    public bool IsGameOver() => isGameOver;
 }
