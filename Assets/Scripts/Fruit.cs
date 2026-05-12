@@ -18,6 +18,11 @@ public class Fruit : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         circleCollider = GetComponent<CircleCollider2D>();
+
+
+
+
+
         spriteRenderer = GetComponent<SpriteRenderer>();
 
         // 기본 물리 설정
@@ -27,8 +32,19 @@ public class Fruit : MonoBehaviour
             rb.gravityScale = 1f;
             rb.linearDamping = 0f; // 직선 운동 저항 없음
             rb.angularDamping = 0.05f; // 회전 저항 (약간만 적용)
+
+
+
+
+
             rb.constraints = RigidbodyConstraints2D.FreezeRotation; // 회전 고정
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+
+
+
+
+            
         }
     }
 
@@ -54,25 +70,25 @@ public class Fruit : MonoBehaviour
                 spriteRenderer.sprite = fruitData.sprite;
                 spriteRenderer.color = Color.white;
 
-                // 스프라이트의 로컬 반경(픽셀 크기 / PPU / 2)을 기준으로 스케일을 역산해
-                // 월드 반경이 정확히 fruitData.radius가 되도록 맞춤
-                float spriteLocalHalfWidth = fruitData.sprite.bounds.extents.x;
-                if (spriteLocalHalfWidth > 0f)
+                // x/y 중 짧은 쪽 기준으로 원을 맞춤
+                // → 비정사각형·투명 여백 스프라이트에서도 콜라이더가 이미지 밖으로 나가지 않음
+                Vector2 ext = fruitData.sprite.bounds.extents;
+                float spriteLocalHalfSize = Mathf.Min(ext.x, ext.y);
+                if (spriteLocalHalfSize > 0f)
                 {
-                    float scale = fruitData.radius / spriteLocalHalfWidth;
+                    float scale = fruitData.radius / spriteLocalHalfSize;
                     transform.localScale = Vector3.one * scale;
 
-                    // 콜라이더는 로컬 공간에서 spriteLocalHalfWidth로 설정
-                    // → 월드 반경 = spriteLocalHalfWidth * scale = fruitData.radius ✓
+                    // 콜라이더 로컬 반경 = spriteLocalHalfSize
+                    // → 월드 반경 = spriteLocalHalfSize * scale = fruitData.radius ✓
                     if (circleCollider != null)
                     {
-                        circleCollider.radius = spriteLocalHalfWidth;
+                        circleCollider.radius = spriteLocalHalfSize;
                         circleCollider.isTrigger = false;
                     }
                 }
                 else
                 {
-                    // 스프라이트 bounds를 읽지 못할 경우 폴백
                     ApplyDefaultSizeAndCollider();
                 }
             }
