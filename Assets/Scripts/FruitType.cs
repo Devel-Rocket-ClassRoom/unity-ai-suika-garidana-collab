@@ -30,6 +30,7 @@ public class FruitData
     public FruitType type;
     public string name;
     public float radius; // 반지름 (기본 크기 기준)
+    public float spriteLocalRadius; // 스프라이트 콘텐츠 실측 반경 (로컬 공간, PPU=100 기준)
     public int score; // 머지 시 획득 점수
     public bool canDrop; // 직접 떨어뜨릴 수 있는지 여부
     public Color color; // 과일의 색상
@@ -39,6 +40,7 @@ public class FruitData
         FruitType type,
         string name,
         float radius,
+        float spriteLocalRadius,
         int score,
         bool canDrop,
         Color color,
@@ -48,6 +50,7 @@ public class FruitData
         this.type = type;
         this.name = name;
         this.radius = radius;
+        this.spriteLocalRadius = spriteLocalRadius;
         this.score = score;
         this.canDrop = canDrop;
         this.color = color;
@@ -105,12 +108,15 @@ public static class FruitDatabase
         );
 #endif
 
+        // spriteLocalRadius: 픽셀 분석으로 측정한 콘텐츠 min(w,h)/2 / PPU(100)
+        // → sprite.bounds.extents(항상 5.12) 대신 실제 과일 이미지 크기를 반영
         fruitDatas = new FruitData[11]
         {
             new FruitData(
                 FruitType.Cherry,
                 "체리",
                 baseRadius * Mathf.Pow(sizeMultiplier, 0),
+                2.88f,
                 10,
                 true,
                 new Color(0.914f, 0.118f, 0.388f),
@@ -120,6 +126,7 @@ public static class FruitDatabase
                 FruitType.Strawberry,
                 "딸기",
                 baseRadius * Mathf.Pow(sizeMultiplier, 1),
+                3.14f,
                 20,
                 true,
                 new Color(1f, 0.420f, 0.420f),
@@ -129,6 +136,7 @@ public static class FruitDatabase
                 FruitType.Grape,
                 "포도",
                 baseRadius * Mathf.Pow(sizeMultiplier, 2),
+                2.64f,
                 30,
                 true,
                 new Color(0.612f, 0.149f, 0.690f),
@@ -138,6 +146,7 @@ public static class FruitDatabase
                 FruitType.Mandarin,
                 "한라봉",
                 baseRadius * Mathf.Pow(sizeMultiplier, 3),
+                3.41f,
                 40,
                 true,
                 new Color(1f, 0.596f, 0f),
@@ -147,6 +156,7 @@ public static class FruitDatabase
                 FruitType.Persimmon,
                 "감",
                 baseRadius * Mathf.Pow(sizeMultiplier, 4),
+                3.12f,
                 50,
                 true,
                 new Color(1f, 0.435f, 0f),
@@ -156,6 +166,7 @@ public static class FruitDatabase
                 FruitType.Apple,
                 "사과",
                 baseRadius * Mathf.Pow(sizeMultiplier, 5),
+                3.24f,
                 60,
                 false,
                 new Color(0.302f, 0.686f, 0.314f),
@@ -165,6 +176,7 @@ public static class FruitDatabase
                 FruitType.Pear,
                 "배",
                 baseRadius * Mathf.Pow(sizeMultiplier, 6),
+                2.75f,
                 70,
                 false,
                 new Color(0.545f, 0.765f, 0.290f),
@@ -174,6 +186,7 @@ public static class FruitDatabase
                 FruitType.Peach,
                 "복숭아",
                 baseRadius * Mathf.Pow(sizeMultiplier, 7),
+                2.93f,
                 80,
                 false,
                 new Color(1f, 0.670f, 0.569f),
@@ -183,6 +196,7 @@ public static class FruitDatabase
                 FruitType.Pineapple,
                 "파인애플",
                 baseRadius * Mathf.Pow(sizeMultiplier, 8),
+                2.97f,
                 90,
                 false,
                 new Color(1f, 0.843f, 0f),
@@ -192,6 +206,7 @@ public static class FruitDatabase
                 FruitType.Melon,
                 "멜론",
                 baseRadius * Mathf.Pow(sizeMultiplier, 9),
+                3.82f,
                 100,
                 false,
                 new Color(0f, 0.792f, 0.325f),
@@ -201,6 +216,7 @@ public static class FruitDatabase
                 FruitType.Watermelon,
                 "수박",
                 baseRadius * Mathf.Pow(sizeMultiplier, 10),
+                3.80f,
                 110,
                 false,
                 new Color(0.898f, 0.224f, 0.207f),
