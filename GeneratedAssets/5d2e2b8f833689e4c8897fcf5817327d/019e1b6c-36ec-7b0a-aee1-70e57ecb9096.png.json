@@ -1,0 +1,28 @@
+{
+    "asset": "5d2e2b8f833689e4c8897fcf5817327d",
+    "fileName": "019e1b6c-36ec-7b0a-aee1-70e57ecb9096.png",
+    "prompt": "Casual cartoon style wooden frame for a game container, thick warm brown (#8B4513) wooden texture, rectangular frame shape, high quality, white background for removal",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

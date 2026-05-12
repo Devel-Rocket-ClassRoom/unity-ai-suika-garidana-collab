@@ -5,11 +5,28 @@ using UnityEngine;
 /// </summary>
 public class FruitSpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject fruitPrefab;
-    [SerializeField] private Transform dropZone;           // 과일이 떨어질 영역 (게임 컨테이너)
-    [SerializeField] private float dropHeight = 10f;        // 과일이 생성될 높이
-    [SerializeField] private float containerWidth = 10f;    // 게임 컨테이너의 너비
-    [SerializeField] private FruitType initialFruitType = FruitType.Cherry;
+    [SerializeField]
+    private GameObject fruitPrefab;
+
+    [SerializeField]
+    private Transform dropZone;
+
+    [SerializeField]
+    private float dropHeight = 7.5f; // 게임오버 라인(Y=6.5) 바로 위
+
+    [SerializeField]
+    private float containerWidth = 10f;
+
+    // 드롭 가능한 과일 목록과 등장 가중치 (낮은 단계일수록 자주 등장)
+    private static readonly FruitType[] droppableFruits =
+    {
+        FruitType.Cherry,
+        FruitType.Strawberry,
+        FruitType.Grape,
+        FruitType.Mandarin,
+        FruitType.Persimmon,
+    };
+    private static readonly float[] dropWeights = { 30f, 25f, 20f, 15f, 10f };
 
     private FruitType nextFruitType;
     private Camera mainCamera;
@@ -18,61 +35,48 @@ public class FruitSpawner : MonoBehaviour
     private void Start()
     {
         mainCamera = Camera.main;
-        nextFruitType = initialFruitType;
 
         if (fruitPrefab == null)
-        {
             Debug.LogError("FruitPrefab이 할당되지 않았습니다!");
-        }
-
         if (dropZone == null)
-        {
             Debug.LogError("DropZone(게임 컨테이너)이 할당되지 않았습니다!");
-        }
+
+        // 시작 시 첫 번째 과일도 랜덤으로 결정
+        SetNextFruitType(SelectRandomDroppableFruit());
     }
 
     private void Update()
     {
-        // 마우스 클릭 감지
         if (Input.GetMouseButtonDown(0) && canDrop)
-        {
             DropFruit();
-        }
 
-        // 키 입력으로 과일 떨어뜨리기 (선택사항)
         HandleKeyInput();
     }
 
-    /// <summary>
-    /// 마우스 위치에 따라 과일을 생성하고 떨어뜨린다
-    /// </summary>
     private void DropFruit()
     {
-        // 마우스의 월드 좌표를 구한다
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main Camera를 찾을 수 없습니다!");
+            return;
+        }
+
         Vector3 mousePos = Input.mousePosition;
-        mousePos.z = 10f; // 카메라 앞 거리
+        mousePos.z = 10f;
         Vector3 worldPos = mainCamera.ScreenToWorldPoint(mousePos);
 
-        // 마우스 X좌표를 컨테이너 범위 내로 제한한다
         float clampedX = Mathf.Clamp(
             worldPos.x,
             dropZone.position.x - containerWidth / 2,
             dropZone.position.x + containerWidth / 2
         );
 
-        // 과일 생성 위치 설정
-        Vector3 spawnPos = new Vector3(clampedX, dropHeight, 0);
+        SpawnFruitAtPosition(new Vector3(clampedX, dropHeight, 0), nextFruitType);
 
-        // 과일 생성
-        SpawnFruitAtPosition(spawnPos, nextFruitType);
-
-        // 다음 과일 타입 결정 (일반적으로 랜덤이지만, 현재는 고정)
-        SetNextFruitType(initialFruitType);
+        // 드롭 후 다음 과일을 랜덤으로 결정
+        SetNextFruitType(SelectRandomDroppableFruit());
     }
 
-    /// <summary>
-    /// 특정 위치에 과일을 생성한다
-    /// </summary>
     private void SpawnFruitAtPosition(Vector3 position, FruitType fruitType)
     {
         if (fruitPrefab == null)
@@ -81,75 +85,55 @@ public class FruitSpawner : MonoBehaviour
             return;
         }
 
-        // 과일 게임 객체 생성
         GameObject fruitObj = Instantiate(fruitPrefab, position, Quaternion.identity);
-        fruitObj.name = $"{FruitDatabase.GetFruitData(fruitType).name}";
+        fruitObj.name = FruitDatabase.GetFruitData(fruitType).name;
 
-        // Fruit 컴포넌트 초기화
         Fruit fruit = fruitObj.GetComponent<Fruit>();
         if (fruit != null)
-        {
             fruit.Initialize(fruitType);
-        }
         else
-        {
             Debug.LogError("Fruit 컴포넌트를 찾을 수 없습니다!");
-        }
-
-        // Rigidbody가 활성화되었는지 확인
-        Rigidbody2D rb = fruitObj.GetComponent<Rigidbody2D>();
-        if (rb == null)
-        {
-            Debug.LogError("Rigidbody2D 컴포넌트를 찾을 수 없습니다!");
-        }
     }
 
     /// <summary>
-    /// 다음 과일 타입을 설정한다
+    /// 가중치 기반 랜덤으로 드롭 가능한 과일 타입을 선택한다
     /// </summary>
+    private FruitType SelectRandomDroppableFruit()
+    {
+        float totalWeight = 0f;
+        foreach (float w in dropWeights)
+            totalWeight += w;
+
+        float roll = Random.Range(0f, totalWeight);
+        float cumulative = 0f;
+        for (int i = 0; i < droppableFruits.Length; i++)
+        {
+            cumulative += dropWeights[i];
+            if (roll < cumulative)
+                return droppableFruits[i];
+        }
+        return droppableFruits[0];
+    }
+
     public void SetNextFruitType(FruitType fruitType)
     {
-        // 직접 드롭할 수 없는 과일인 경우 체리로 설정
-        FruitData data = FruitDatabase.GetFruitData(fruitType);
-        if (data != null && data.canDrop)
-        {
-            nextFruitType = fruitType;
-        }
-        else
-        {
-            nextFruitType = initialFruitType;
-        }
+        nextFruitType = fruitType;
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateNextFruit(nextFruitType);
     }
 
-    /// <summary>
-    /// 현재 다음 과일 타입을 반환한다
-    /// </summary>
-    public FruitType GetNextFruitType()
-    {
-        return nextFruitType;
-    }
+    public FruitType GetNextFruitType() => nextFruitType;
 
-    /// <summary>
-    /// 과일 드롭을 활성화/비활성화한다
-    /// </summary>
-    public void SetCanDrop(bool canDrop)
-    {
-        this.canDrop = canDrop;
-    }
+    public void SetCanDrop(bool value) => canDrop = value;
 
-    /// <summary>
-    /// 키 입력 처리 (선택사항)
-    /// </summary>
     private void HandleKeyInput()
     {
-        // 방향키로 과일 위치 조정 (선택사항)
         if (Input.GetKeyDown(KeyCode.Space) && canDrop)
         {
-            // 스페이스바로 화면 중앙에 과일 떨어뜨리기
             Vector3 centerPos = dropZone.position;
             centerPos.y = dropHeight;
             SpawnFruitAtPosition(centerPos, nextFruitType);
-            SetNextFruitType(initialFruitType);
+            SetNextFruitType(SelectRandomDroppableFruit());
         }
     }
 }

@@ -1,0 +1,28 @@
+{
+    "asset": "5a65334bf86a4824da17fbd6dfc86ea7",
+    "fileName": "019e1b6a-8fc8-7522-9433-4b8d66ea31b3.png",
+    "prompt": "Cute casual 2D pear sprite, roundish shape, light green (#8BC34A), white background, high quality, game icon style",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

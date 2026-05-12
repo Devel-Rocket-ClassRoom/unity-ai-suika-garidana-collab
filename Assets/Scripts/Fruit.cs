@@ -1,11 +1,9 @@
 using UnityEngine;
 
-/// <summary>
-/// 개별 과일을 나타내는 클래스
-/// </summary>
 public class Fruit : MonoBehaviour
 {
-    [SerializeField] private FruitType fruitType;
+    [SerializeField]
+    private FruitType fruitType;
     private Rigidbody2D rb;
     private CircleCollider2D circleCollider;
     private SpriteRenderer spriteRenderer;
@@ -18,11 +16,18 @@ public class Fruit : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         circleCollider = GetComponent<CircleCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 1f;
+            rb.linearDamping = 0.05f;
+            rb.angularDamping = 0.5f;
+            rb.constraints = RigidbodyConstraints2D.None;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
     }
 
-    /// <summary>
-    /// 과일을 초기화한다
-    /// </summary>
     public void Initialize(FruitType type)
     {
         fruitType = type;
@@ -34,78 +39,70 @@ public class Fruit : MonoBehaviour
             return;
         }
 
-        // 스프라이트 렌더러의 색상 설정
         if (spriteRenderer != null)
         {
-            spriteRenderer.color = fruitData.color;
+            if (fruitData.sprite != null)
+            {
+                spriteRenderer.sprite = fruitData.sprite;
+                spriteRenderer.color = Color.white;
+
+                float localR = fruitData.spriteLocalRadius;
+                if (localR > 0f)
+                {
+                    transform.localScale = Vector3.one * (fruitData.radius / localR);
+                    if (circleCollider != null)
+                    {
+                        circleCollider.radius = localR;
+                        circleCollider.isTrigger = false;
+                    }
+                }
+                else
+                {
+                    ApplyDefaultSizeAndCollider();
+                }
+            }
+            else
+            {
+                spriteRenderer.color = fruitData.color;
+                ApplyDefaultSizeAndCollider();
+            }
         }
 
-        // 원형 콜라이더 설정
-        if (circleCollider != null)
-        {
-            circleCollider.radius = fruitData.radius;
-        }
-
-        // 스케일 설정
-        Vector3 scale = Vector3.one * fruitData.radius * 2;
-        transform.localScale = scale;
-
-        // Rigidbody 설정
         if (rb != null)
         {
             rb.gravityScale = 1f;
+            rb.mass = fruitData.radius * fruitData.radius;
+            rb.linearDamping = 0.05f;
+            rb.angularDamping = 0.5f;
             rb.constraints = RigidbodyConstraints2D.None;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
         isMerged = false;
     }
 
-    /// <summary>
-    /// 과일의 타입을 반환한다
-    /// </summary>
-    public FruitType GetFruitType()
+    private void ApplyDefaultSizeAndCollider()
     {
-        return fruitType;
-    }
-
-    /// <summary>
-    /// 과일의 데이터를 반환한다
-    /// </summary>
-    public FruitData GetFruitData()
-    {
-        return fruitData;
-    }
-
-    /// <summary>
-    /// 과일을 머지 표시한다 (다시 머지되지 않도록)
-    /// </summary>
-    public void MarkAsMerged()
-    {
-        isMerged = true;
-    }
-
-    /// <summary>
-    /// 과일이 이미 머지되었는지 확인한다
-    /// </summary>
-    public bool IsMerged()
-    {
-        return isMerged;
-    }
-
-    /// <summary>
-    /// 과일의 속도를 설정한다
-    /// </summary>
-    public void SetVelocity(Vector2 velocity)
-    {
-        if (rb != null)
+        transform.localScale = Vector3.one * fruitData.radius * 2f;
+        if (circleCollider != null)
         {
-            rb.linearVelocity = velocity;
+            circleCollider.radius = 0.5f;
+            circleCollider.isTrigger = false;
         }
     }
 
-    /// <summary>
-    /// 과일을 삭제한다
-    /// </summary>
+    public FruitType GetFruitType() => fruitType;
+    public FruitData GetFruitData() => fruitData;
+
+    public void MarkAsMerged() { isMerged = true; }
+    public bool IsMerged() => isMerged;
+
+    public void SetVelocity(Vector2 velocity)
+    {
+        if (rb != null)
+            rb.linearVelocity = velocity;
+    }
+
     public void Destroy()
     {
         Destroy(gameObject);

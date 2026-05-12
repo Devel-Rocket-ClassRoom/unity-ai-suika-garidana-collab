@@ -5,32 +5,48 @@ using UnityEngine;
 /// </summary>
 public class FruitCollisionHandler : MonoBehaviour
 {
-    [SerializeField] private GameObject fruitPrefab;
-    [SerializeField] private float mergeDelay = 0.1f;      // 머지 후 지연 시간 (재머지 방지)
+    [SerializeField]
+    private float mergeDelay = 0.2f;
+
+    [SerializeField]
+    private float bounceRestitution = 0.05f;
 
     private Fruit fruit;
     private float lastMergeTime = -1f;
+    private Rigidbody2D rb;
 
     private void Start()
     {
         fruit = GetComponent<Fruit>();
+        rb = GetComponent<Rigidbody2D>();
+
         if (fruit == null)
-        {
             Debug.LogError("Fruit 컴포넌트를 찾을 수 없습니다!");
+
+        if (rb != null)
+        {
+            PhysicsMaterial2D physicsMaterial = new PhysicsMaterial2D();
+            physicsMaterial.friction = 0.8f;
+            physicsMaterial.bounciness = bounceRestitution;
+            rb.sharedMaterial = physicsMaterial;
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (fruit == null || fruit.IsMerged()) return;
+        if (fruit == null || fruit.IsMerged())
+            return;
+
+        // 수박은 최종 단계 — 더 이상 머지 없음
+        if (fruit.GetFruitType() == FruitType.Watermelon)
+            return;
 
         Fruit otherFruit = collision.gameObject.GetComponent<Fruit>();
-        if (otherFruit == null || otherFruit.IsMerged()) return;
+        if (otherFruit == null || otherFruit.IsMerged())
+            return;
 
-        // 같은 종류의 과일인지 확인
         if (fruit.GetFruitType() == otherFruit.GetFruitType())
         {
-            // 머지 시간이 충분히 지났는지 확인 (같은 프레임의 중복 머지 방지)
             if (Time.time - lastMergeTime > mergeDelay)
             {
                 MergeFruits(fruit, otherFruit);
@@ -40,37 +56,41 @@ public class FruitCollisionHandler : MonoBehaviour
     }
 
     /// <summary>
-    /// 두 과일을 머지한다
+    /// 두 과일을 머지하고 다음 단계 과일을 생성한다
     /// </summary>
     private void MergeFruits(Fruit fruit1, Fruit fruit2)
     {
-        FruitType currentType = fruit1.GetFruitType();
-        FruitType nextType = FruitDatabase.GetNextFruitType(currentType);
-
-        // 두 과일의 중심 위치에서 새 과일 생성
-        Vector3 mergePosition = (fruit1.transform.position + fruit2.transform.position) / 2f;
-
-        // 새로운 과일 생성
-        GameObject newFruitObj = Instantiate(fruitPrefab, mergePosition, Quaternion.identity);
-        FruitData nextData = FruitDatabase.GetFruitData(nextType);
-        newFruitObj.name = nextData.name;
-
-        Fruit newFruit = newFruitObj.GetComponent<Fruit>();
-        if (newFruit != null)
+        GameObject prefab = GameManager.Instance?.GetFruitPrefab();
+        if (prefab == null)
         {
-            newFruit.Initialize(nextType);
+            Debug.LogError("GameManager에 FruitPrefab이 할당되지 않았습니다!");
+            return;
         }
 
-        // 머지된 과일들을 표시
+        FruitType currentType = fruit1.GetFruitType();
+        FruitType nextType = FruitDatabase.GetNextFruitType(currentType);
+        Vector3 mergePosition = (fruit1.transform.position + fruit2.transform.position) / 2f;
+
         fruit1.MarkAsMerged();
         fruit2.MarkAsMerged();
 
-        // 점수 추가
+        FruitData nextData = FruitDatabase.GetFruitData(nextType);
+        if (nextData == null)
+        {
+            Debug.LogError($"머지 후 과일 데이터를 찾을 수 없습니다: {nextType}");
+            return;
+        }
+
         GameManager.Instance.AddScore(nextData.score);
 
-        // 머지된 과일들 삭제
         fruit1.Destroy();
         fruit2.Destroy();
+
+        GameObject newFruitObj = Instantiate(prefab, mergePosition, Quaternion.identity);
+        newFruitObj.name = nextData.name;
+        Fruit newFruit = newFruitObj.GetComponent<Fruit>();
+        if (newFruit != null)
+            newFruit.Initialize(nextType);
 
         Debug.Log($"{nextData.name} 생성! 점수 +{nextData.score}");
     }
