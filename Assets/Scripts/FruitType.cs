@@ -1,7 +1,4 @@
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 /// <summary>
 /// 과일의 종류를 나타내는 열거형
@@ -71,42 +68,18 @@ public static class FruitDatabase
         float baseRadius = 0.25f;
         float sizeMultiplier = 1.32f;
 
-        // 스프라이트 로드
-        Sprite cherrySprite = null;
-        Sprite strawberrySprite = null;
-        Sprite grapeSprite = null;
-        Sprite mandarinSprite = null;
-        Sprite persimmonSprite = null;
-        Sprite appleSprite = null;
-        Sprite pearSprite = null;
-        Sprite peachSprite = null;
-        Sprite pineappleSprite = null;
-        Sprite melonSprite = null;
-        Sprite watermelonSprite = null;
-
-#if UNITY_EDITOR
-        cherrySprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Fruits/Cherry.png");
-        strawberrySprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-            "Assets/Sprites/Fruits/Strawberry.png"
-        );
-        grapeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Fruits/Grape.png");
-        mandarinSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-            "Assets/Sprites/Fruits/Mandarin.png"
-        );
-        persimmonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-            "Assets/Sprites/Fruits/Persimmon.png"
-        );
-        appleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Fruits/Apple.png");
-        pearSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Fruits/Pear.png");
-        peachSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Fruits/Peach.png");
-        pineappleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-            "Assets/Sprites/Fruits/Pineapple.png"
-        );
-        melonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Fruits/Melon.png");
-        watermelonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-            "Assets/Sprites/Fruits/Watermelon.png"
-        );
-#endif
+        // Resources/Fruits/ 에서 로드 — 에디터·빌드 모두 동작
+        Sprite cherrySprite     = Resources.Load<Sprite>("Fruits/Cherry");
+        Sprite strawberrySprite = Resources.Load<Sprite>("Fruits/Strawberry");
+        Sprite grapeSprite      = Resources.Load<Sprite>("Fruits/Grape");
+        Sprite mandarinSprite   = Resources.Load<Sprite>("Fruits/Mandarin");
+        Sprite persimmonSprite  = Resources.Load<Sprite>("Fruits/Persimmon");
+        Sprite appleSprite      = Resources.Load<Sprite>("Fruits/Apple");
+        Sprite pearSprite       = Resources.Load<Sprite>("Fruits/Pear");
+        Sprite peachSprite      = Resources.Load<Sprite>("Fruits/Peach");
+        Sprite pineappleSprite  = Resources.Load<Sprite>("Fruits/Pineapple");
+        Sprite melonSprite      = Resources.Load<Sprite>("Fruits/Melon");
+        Sprite watermelonSprite = Resources.Load<Sprite>("Fruits/Watermelon");
 
         // spriteLocalRadius: 픽셀 분석으로 측정한 콘텐츠 min(w,h)/2 / PPU(100)
         // → sprite.bounds.extents(항상 5.12) 대신 실제 과일 이미지 크기를 반영
