@@ -75,11 +75,16 @@ public class GameManager : MonoBehaviour
         Fruit[] allFruits = FindObjectsOfType<Fruit>();
         foreach (Fruit fruit in allFruits)
         {
-            if (fruit.transform.position.y > containerTop.position.y)
-            {
-                anyAboveLine = true;
-                break;
-            }
+            if (fruit.transform.position.y <= containerTop.position.y)
+                continue;
+
+            // 빠르게 낙하 중인 과일(방금 생성된 과일)은 판정에서 제외
+            Rigidbody2D rb = fruit.GetComponent<Rigidbody2D>();
+            if (rb != null && rb.linearVelocity.y < -0.5f)
+                continue;
+
+            anyAboveLine = true;
+            break;
         }
 
         if (anyAboveLine)

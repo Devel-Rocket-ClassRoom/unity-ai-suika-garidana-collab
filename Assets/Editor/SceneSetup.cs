@@ -107,12 +107,10 @@ public class SceneSetup
         GameObject container = new GameObject("Container");
         container.transform.position = Vector3.zero;
 
+        // BoxCollider2D를 추가하지 않음 — Floor/LeftWall/RightWall이 물리 경계를 담당
+        // 닫힌 박스 콜라이더를 추가하면 과일이 컨테이너 상단에 막혀 게임오버가 즉시 발생함
         SpriteRenderer spriteRenderer = container.AddComponent<SpriteRenderer>();
         spriteRenderer.color = new Color(1f, 0.98f, 0.8f, 1f);
-
-        BoxCollider2D boxCollider = container.AddComponent<BoxCollider2D>();
-        boxCollider.size = new Vector2(10, 12);
-        boxCollider.isTrigger = false;
 
         Debug.Log("✅ Container 생성 완료");
         return container;
@@ -302,6 +300,7 @@ public class SceneSetup
         SerializedObject so = new SerializedObject(spawner);
         so.FindProperty("fruitPrefab").objectReferenceValue = fruitPrefab;
         so.FindProperty("dropZone").objectReferenceValue = container.transform;
+        so.FindProperty("dropHeight").floatValue = 7.5f; // 게임오버 라인(6.5) 바로 위에서 생성
         so.ApplyModifiedProperties();
 
         Debug.Log("✅ FruitSpawner 생성 완료");
