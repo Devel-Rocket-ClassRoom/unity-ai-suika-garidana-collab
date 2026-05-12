@@ -75,6 +75,12 @@ public class FruitCollisionHandler : MonoBehaviour
         fruit2.MarkAsMerged();
 
         FruitData nextData = FruitDatabase.GetFruitData(nextType);
+        if (nextData == null)
+        {
+            Debug.LogError($"머지 후 과일 데이터를 찾을 수 없습니다: {nextType}");
+            return;
+        }
+
         GameManager.Instance.AddScore(nextData.score);
 
         fruit1.Destroy();

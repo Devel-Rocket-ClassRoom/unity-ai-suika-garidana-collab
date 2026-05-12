@@ -12,7 +12,7 @@ public class FruitSpawner : MonoBehaviour
     private Transform dropZone;
 
     [SerializeField]
-    private float dropHeight = 10f;
+    private float dropHeight = 7.5f; // 게임오버 라인(Y=6.5) 바로 위
 
     [SerializeField]
     private float containerWidth = 10f;
@@ -55,6 +55,12 @@ public class FruitSpawner : MonoBehaviour
 
     private void DropFruit()
     {
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main Camera를 찾을 수 없습니다!");
+            return;
+        }
+
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = 10f;
         Vector3 worldPos = mainCamera.ScreenToWorldPoint(mousePos);
