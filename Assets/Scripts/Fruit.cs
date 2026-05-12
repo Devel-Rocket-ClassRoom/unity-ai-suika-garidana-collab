@@ -46,48 +46,69 @@ public class Fruit : MonoBehaviour
             return;
         }
 
-        // 스프라이트 및 색상 설정
+        // 스프라이트 설정 + 콜라이더/스케일을 스프라이트 실제 크기에 맞춰 보정
         if (spriteRenderer != null)
         {
             if (fruitData.sprite != null)
             {
                 spriteRenderer.sprite = fruitData.sprite;
-                spriteRenderer.color = Color.white; // 이미지가 있을 때는 흰색으로 설정 (이미지 본래 색상 유지)
+                spriteRenderer.color = Color.white;
+
+                // 스프라이트의 로컬 반경(픽셀 크기 / PPU / 2)을 기준으로 스케일을 역산해
+                // 월드 반경이 정확히 fruitData.radius가 되도록 맞춤
+                float spriteLocalHalfWidth = fruitData.sprite.bounds.extents.x;
+                if (spriteLocalHalfWidth > 0f)
+                {
+                    float scale = fruitData.radius / spriteLocalHalfWidth;
+                    transform.localScale = Vector3.one * scale;
+
+                    // 콜라이더는 로컬 공간에서 spriteLocalHalfWidth로 설정
+                    // → 월드 반경 = spriteLocalHalfWidth * scale = fruitData.radius ✓
+                    if (circleCollider != null)
+                    {
+                        circleCollider.radius = spriteLocalHalfWidth;
+                        circleCollider.isTrigger = false;
+                    }
+                }
+                else
+                {
+                    // 스프라이트 bounds를 읽지 못할 경우 폴백
+                    ApplyDefaultSizeAndCollider();
+                }
             }
             else
             {
                 spriteRenderer.color = fruitData.color;
+                ApplyDefaultSizeAndCollider();
             }
         }
-
-        // 원형 콜라이더 설정
-        if (circleCollider != null)
-        {
-            circleCollider.radius = fruitData.radius;
-        }
-
-        // 스케일 설정
-        Vector3 scale = Vector3.one * fruitData.radius * 2;
-        transform.localScale = scale;
 
         // Rigidbody 설정
         if (rb != null)
         {
             rb.gravityScale = 1f;
-            rb.mass = fruitData.radius; // 크기에 따라 질량 설정
+            rb.mass = fruitData.radius;
             rb.linearDamping = 0f;
             rb.angularDamping = 0.05f;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
-        // Circle Collider 설정
+        isMerged = false;
+    }
+
+    /// <summary>
+    /// 스프라이트 없을 때 또는 bounds를 읽지 못할 때 사용하는 기본 크기/콜라이더 설정
+    /// scale = diameter, 콜라이더 로컬 반경 = 0.5 → 월드 반경 = fruitData.radius
+    /// </summary>
+    private void ApplyDefaultSizeAndCollider()
+    {
+        transform.localScale = Vector3.one * fruitData.radius * 2f;
         if (circleCollider != null)
         {
-            circleCollider.isTrigger = false; // 물리 충돌 활성화
+            circleCollider.radius = 0.5f;
+            circleCollider.isTrigger = false;
         }
-
-        isMerged = false;
     }
 
     /// <summary>
