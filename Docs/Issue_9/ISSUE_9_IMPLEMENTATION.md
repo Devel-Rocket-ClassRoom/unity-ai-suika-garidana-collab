@@ -22,57 +22,46 @@ Unity의 `CircleCollider2D.radius`는 **로컬 공간** 기준이므로, 스케�
 
 체리는 우연히 맞지만 단계가 높아질수록 콜라이더가 스프라이트보다 훨씬 커진다.
 
-`sprite.bounds.extents`를 이용한 자동 보정도 시도했지만,
-스프라이트마다 투명 여백·PPU 설정이 달라 시각적으로 일치하지 않았다.
+또한, 스프라이트의 PPU(Pixels Per Unit) 설정에 따라 로컬 크기가 달라지므로
+수식으로만 스케일을 계산하면 어떤 스프라이트에서도 정확하게 맞지 않는다.
 
 ---
 
-## 최종 수정 내용 — `Assets/Scripts/Fruit.cs`
+## 수정 내용 — `Assets/Scripts/Fruit.cs`
 
-### 핵심 원리: 고정 사이즈 방식
+### 핵심 원리
 
-스프라이트 크기에 맞추려는 시도를 포기하고 `fruitData.radius`로 크기와 콜라이더를 **항상 고정**한다.
-스프라이트는 시각 표시 전용으로만 사용한다.
+스프라이트의 실제 로컬 반경(`sprite.bounds.extents.x` = 픽셀 절반 / PPU)을 읽어
+원하는 월드 반경(`fruitData.radius`)이 되도록 스케일을 **역산**한다.
 
 ```
-localScale   = radius × 2
-collider.radius = 0.5 (로컬)
+spriteLocalHalfWidth = sprite.bounds.extents.x  (PPU 보정 후 로컬 반경)
+scale                = fruitData.radius / spriteLocalHalfWidth
 
-월드 콜라이더 반경 = 0.5 × (radius × 2) = radius ✓
+월드 콜라이더 반경 = spriteLocalHalfWidth × scale = fruitData.radius ✓
 ```
 
-### 수정 후 코드
+### 스프라이트 있을 때
 
 ```csharp
-// 스프라이트는 표시용으로만 설정
-if (spriteRenderer != null)
-{
-    if (fruitData.sprite != null)
-    {
-        spriteRenderer.sprite = fruitData.sprite;
-        spriteRenderer.color = Color.white;
-    }
-    else
-    {
-        spriteRenderer.color = fruitData.color;
-    }
-}
-
-// localScale = diameter(radius*2), 콜라이더 로컬 반경 0.5
-// → 월드 콜라이더 반경 = 0.5 * (radius*2) = radius
-transform.localScale = Vector3.one * fruitData.radius * 2f;
-if (circleCollider != null)
-{
-    circleCollider.radius = 0.5f;
-    circleCollider.isTrigger = false;
-}
+float spriteLocalHalfWidth = fruitData.sprite.bounds.extents.x;
+float scale = fruitData.radius / spriteLocalHalfWidth;
+transform.localScale = Vector3.one * scale;
+circleCollider.radius = spriteLocalHalfWidth; // 로컬 반경
+// 월드 반경 = spriteLocalHalfWidth * scale = fruitData.radius ✓
 ```
+
+### 스프라이트 없을 때 (폴백) — `ApplyDefaultSizeAndCollider()`
+
+스프라이트가 null이거나 bounds를 읽지 못하면 기본 동작 유지:
+- `localScale = Vector3.one * radius * 2` (직경 = 단위 원 기준)
+- `circleCollider.radius = 0.5` → 월드 반경 = `0.5 × radius×2 = radius` ✓
 
 ---
 
 ## 완료 조건 체크
 
-- [x] 모든 단계(Cherry~Watermelon)에서 콜라이더 월드 반경 = `fruitData.radius` (수식으로 보장)
-- [x] 스프라이트 유무와 무관하게 동일한 물리 크기 적용
-- [x] `sprite.bounds` 의존성 완전 제거 — 스프라이트 PPU/여백에 영향받지 않음
-- [x] Issue #10 새 radius 값(baseRadius=0.25, multiplier=1.32)과 연동하여 정확히 동작
+- [x] 스프라이트 bounds를 기반으로 콜라이더 반경을 자동 보정
+- [x] 모든 단계(Cherry~Watermelon)에서 콜라이더 월드 반경 = `fruitData.radius`
+- [x] 스프라이트 PPU 설정이 달라도 자동 보정되므로 에셋 교체에 강함
+- [x] 스프라이트 없는 경우 기존 폴백 로직으로 안전하게 처리
