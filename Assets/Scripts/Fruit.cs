@@ -5,7 +5,8 @@ using UnityEngine;
 /// </summary>
 public class Fruit : MonoBehaviour
 {
-    [SerializeField] private FruitType fruitType;
+    [SerializeField]
+    private FruitType fruitType;
     private Rigidbody2D rb;
     private CircleCollider2D circleCollider;
     private SpriteRenderer spriteRenderer;
@@ -18,6 +19,17 @@ public class Fruit : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         circleCollider = GetComponent<CircleCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        // 기본 물리 설정
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 1f;
+            rb.linearDamping = 0f; // 직선 운동 저항 없음
+            rb.angularDamping = 0.05f; // 회전 저항 (약간만 적용)
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation; // 회전 고정
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
     }
 
     /// <summary>
@@ -34,10 +46,18 @@ public class Fruit : MonoBehaviour
             return;
         }
 
-        // 스프라이트 렌더러의 색상 설정
+        // 스프라이트 및 색상 설정
         if (spriteRenderer != null)
         {
-            spriteRenderer.color = fruitData.color;
+            if (fruitData.sprite != null)
+            {
+                spriteRenderer.sprite = fruitData.sprite;
+                spriteRenderer.color = Color.white; // 이미지가 있을 때는 흰색으로 설정 (이미지 본래 색상 유지)
+            }
+            else
+            {
+                spriteRenderer.color = fruitData.color;
+            }
         }
 
         // 원형 콜라이더 설정
@@ -54,7 +74,17 @@ public class Fruit : MonoBehaviour
         if (rb != null)
         {
             rb.gravityScale = 1f;
-            rb.constraints = RigidbodyConstraints2D.None;
+            rb.mass = fruitData.radius; // 크기에 따라 질량 설정
+            rb.linearDamping = 0f;
+            rb.angularDamping = 0.05f;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
+
+        // Circle Collider 설정
+        if (circleCollider != null)
+        {
+            circleCollider.isTrigger = false; // 물리 충돌 활성화
         }
 
         isMerged = false;

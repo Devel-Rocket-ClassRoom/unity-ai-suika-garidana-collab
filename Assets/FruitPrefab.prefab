@@ -183,5 +183,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 172500f5245b7f94aac726b418d8c9ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitCollisionHandler
-  fruitPrefab: {fileID: 0}
+  fruitPrefab: {fileID: 9038854158546000649}
   mergeDelay: 0.1
+  bounceRestitution: 0.3

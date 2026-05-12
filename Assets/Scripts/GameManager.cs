@@ -8,9 +8,14 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] private FruitSpawner fruitSpawner;
-    [SerializeField] private Transform containerTop;        // 게임 오버 라인
-    [SerializeField] private float gameOverCheckInterval = 0.5f;
+    [SerializeField]
+    private FruitSpawner fruitSpawner;
+
+    [SerializeField]
+    private Transform containerTop; // 게임 오버 라인
+
+    [SerializeField]
+    private float gameOverCheckInterval = 0.5f;
 
     private int score = 0;
     private float gameOverCheckTimer = 0f;
@@ -60,7 +65,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void CheckGameOverCondition()
     {
-        if (containerTop == null) return;
+        if (containerTop == null)
+            return;
 
         Fruit[] allFruits = FindObjectsOfType<Fruit>();
         foreach (Fruit fruit in allFruits)
@@ -79,6 +85,10 @@ public class GameManager : MonoBehaviour
     public void AddScore(int points)
     {
         score += points;
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateScore(score);
+        }
         Debug.Log($"점수 추가: +{points}, 현재 점수: {score}");
     }
 
@@ -95,7 +105,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void GameOver()
     {
-        if (isGameOver) return;
+        if (isGameOver)
+            return;
 
         isGameOver = true;
         Debug.Log("게임 오버! 최종 점수: " + score);

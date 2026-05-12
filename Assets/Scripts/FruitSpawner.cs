@@ -5,11 +5,20 @@ using UnityEngine;
 /// </summary>
 public class FruitSpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject fruitPrefab;
-    [SerializeField] private Transform dropZone;           // 과일이 떨어질 영역 (게임 컨테이너)
-    [SerializeField] private float dropHeight = 10f;        // 과일이 생성될 높이
-    [SerializeField] private float containerWidth = 10f;    // 게임 컨테이너의 너비
-    [SerializeField] private FruitType initialFruitType = FruitType.Cherry;
+    [SerializeField]
+    private GameObject fruitPrefab;
+
+    [SerializeField]
+    private Transform dropZone; // 과일이 떨어질 영역 (게임 컨테이너)
+
+    [SerializeField]
+    private float dropHeight = 10f; // 과일이 생성될 높이
+
+    [SerializeField]
+    private float containerWidth = 10f; // 게임 컨테이너의 너비
+
+    [SerializeField]
+    private FruitType initialFruitType = FruitType.Cherry;
 
     private FruitType nextFruitType;
     private Camera mainCamera;
@@ -118,6 +127,11 @@ public class FruitSpawner : MonoBehaviour
         else
         {
             nextFruitType = initialFruitType;
+        }
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateNextFruit(nextFruitType);
         }
     }
 

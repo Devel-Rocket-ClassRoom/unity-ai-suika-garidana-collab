@@ -5,27 +5,47 @@ using UnityEngine;
 /// </summary>
 public class FruitCollisionHandler : MonoBehaviour
 {
-    [SerializeField] private GameObject fruitPrefab;
-    [SerializeField] private float mergeDelay = 0.1f;      // 머지 후 지연 시간 (재머지 방지)
+    [SerializeField]
+    private GameObject fruitPrefab;
+
+    [SerializeField]
+    private float mergeDelay = 0.2f; // 머지 후 지연 시간 (재머지 방지)
+
+    [SerializeField]
+    private float bounceRestitution = 0.3f; // 반발력
 
     private Fruit fruit;
     private float lastMergeTime = -1f;
+    private Rigidbody2D rb;
 
     private void Start()
     {
         fruit = GetComponent<Fruit>();
+        rb = GetComponent<Rigidbody2D>();
+
         if (fruit == null)
         {
             Debug.LogError("Fruit 컴포넌트를 찾을 수 없습니다!");
+        }
+
+        // PhysicsMaterial2D 설정
+        if (rb != null)
+        {
+            PhysicsMaterial2D physicsMaterial = new PhysicsMaterial2D();
+            physicsMaterial.friction = 0.4f; // 마찰력 설정
+            physicsMaterial.bounciness = bounceRestitution; // 반발력 설정
+            rb.sharedMaterial = physicsMaterial;
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (fruit == null || fruit.IsMerged()) return;
+        if (fruit == null || fruit.IsMerged())
+            return;
 
         Fruit otherFruit = collision.gameObject.GetComponent<Fruit>();
-        if (otherFruit == null || otherFruit.IsMerged()) return;
+        if (otherFruit == null || otherFruit.IsMerged())
+            return;
 
         // 같은 종류의 과일인지 확인
         if (fruit.GetFruitType() == otherFruit.GetFruitType())
