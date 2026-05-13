@@ -48,6 +48,38 @@ public class GameManager : MonoBehaviour
 
         if (fruitPrefab == null)
             Debug.LogWarning("FruitPrefab이 GameManager에 할당되지 않았습니다!");
+
+        InitializeWallSprites();
+    }
+
+    private void InitializeWallSprites()
+    {
+        GameObject[] walls = { GameObject.Find("LeftWall"), GameObject.Find("RightWall"), GameObject.Find("Floor") };
+
+        foreach (GameObject wall in walls)
+        {
+            if (wall != null)
+            {
+                SpriteRenderer sr = wall.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite == null)
+                {
+                    sr.sprite = CreateSimpleSprite();
+                    Debug.Log($"벽 스프라이트 생성: {wall.name}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"벽 오브젝트를 찾을 수 없습니다: {wall?.name}");
+            }
+        }
+    }
+
+    private Sprite CreateSimpleSprite()
+    {
+        Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        texture.SetPixels(new Color[] { Color.white, Color.white, Color.white, Color.white });
+        texture.Apply();
+        return Sprite.Create(texture, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f));
     }
 
     private void Update()
